@@ -24,11 +24,17 @@ const AssitiveTouch = (props: IAssitiveTouch) => {
   let current_position_y = height / 2
   
   const pan = useRef(new Animated.ValueXY()).current;
+  const buttonOpacity = useRef(new Animated.Value(props.opacity || 1)).current;
   
   const panResponder = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (evt, state) => {
+        return Math.abs(state.dx) > 1 && Math.abs(state.dy) > 1;
+      },
+      onStartShouldSetPanResponder: () => false,
+      
       onPanResponderGrant: () => {
+        buttonOpacity.setValue(1);
         pan.setOffset({
           x: pan.x._value,
           y: pan.y._value
@@ -99,6 +105,10 @@ const AssitiveTouch = (props: IAssitiveTouch) => {
         }
         
         pan.flattenOffset();
+        Animated.timing(buttonOpacity, {
+          toValue: props.opacity || 1,
+          duration: 2000
+        }).start();
       }
     })
   ).current;
@@ -123,7 +133,8 @@ const AssitiveTouch = (props: IAssitiveTouch) => {
           transform: [{ translateX: pan.x }, { translateY: pan.y }],
           position: 'absolute',
           right: 0,
-          zIndex: 2
+          zIndex: 2,
+          opacity: buttonOpacity
         }}
         {...panResponder.panHandlers}
       >
@@ -211,5 +222,6 @@ interface IAssitiveTouch {
   size: number,
   percentage? : number,
   color?: string,
-  button?: React.ReactNode
+  button?: React.ReactNode,
+  opacity?: number,
 }
